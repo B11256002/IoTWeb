@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>穹頂裝置示範儀表板（Demo）</title>
+  <style>
+    /* ============ Theme ============ */
+    :root{
+      --bg0:#071a1a;
+      --bg1:#0b2a2a;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --text:#e9f5f3;
+      --muted: rgba(233,245,243,.72);
+      --muted2: rgba(233,245,243,.5);
+      --shadow: 0 20px 50px rgba(0,0,0,.35);
+      --accent:#37d3a2;
+      --accent2:#4aa3ff;
+      --warn:#ffcc66;
+      --bad:#ff5b7a;
+      --good:#37d3a2;
+      --radius: 18px;
+      --ring: rgba(55,211,162,.35);
+      --grid: rgba(255,255,255,.06);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font: system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    body.light{
+      --bg0:#f4fbf9;
+      --bg1:#ecf7f4;
+      --card: rgba(0,0,0,.04);
+      --card2: rgba(0,0,0,.03);
+      --stroke: rgba(0,0,0,.08);
+      --text:#0a1b1b;
+      --muted: rgba(10,27,27,.75);
+      --muted2: rgba(10,27,27,.55);
+      --shadow: 0 18px 40px rgba(0,0,0,.12);
+      --grid: rgba(0,0,0,.05);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(55,211,162,.25), transparent 55%),
+        radial-gradient(900px 700px at 85% 25%, rgba(74,163,255,.25), transparent 60%),
+        linear-gradient(160deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    /* ============ Layout ============ */
+    .app{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      position: sticky;
+      top:0;
+      height:100vh;
+      padding:18px 16px;
+      border-right: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 10px 14px;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 14px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.35), transparent 45%),
+                  linear-gradient(135deg, rgba(55,211,162,.95), rgba(74,163,255,.9));
+      box-shadow: var(--shadow);
+      position:relative;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:10px 11px 12px 9px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.35);
+      opacity:.55;
+    }
+    .brand h1{
+      font-size:14px;
+      margin:0;
+      letter-spacing:.3px;
+    }
+    .brand .sub{
+      font-size:12px; color:var(--muted2); margin-top:2px;
+    }
+
+    .nav{
+      display:flex; flex-direction:column; gap:8px;
+      padding:8px 6px;
+    }
+
+    .nav button{
+      all:unset;
+      cursor:pointer;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid transparent;
+      color: var(--muted);
+      transition: .15s ease;
+      user-select:none;
+    }
+    .nav button:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--stroke);
+      color: var(--text);
+    }
+    .nav button.active{
+      background: linear-gradient(135deg, rgba(55,211,162,.18), rgba(74,163,255,.14));
+      border-color: rgba(55,211,162,.35);
+      color: var(--text);
+      box-shadow: 0 12px 26px rgba(0,0,0,.18);
+    }
+    .nav .ico{
+      width:18px; height:18px; display:inline-block;
+      opacity:.92;
+    }
+
+    .side-footer{
+      margin-top:auto;
+      padding:12px 10px;
+      border-top:1px solid var(--stroke);
+      color: var(--muted2);
+      font-size:12px;
+    }
+
+    .main{
+      padding: 18px 18px 42px;
+    }
+
+    .topbar{
+      display:flex; flex-wrap:wrap;
+      align-items:center; justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .title{
+      display:flex; flex-direction:column;
+      gap:4px;
+    }
+    .title h2{ margin:0; font-size:18px; letter-spacing:.2px; }
+    .title .meta{
+      display:flex; gap:10px; flex-wrap:wrap;
+      font-size:12px; color:var(--muted);
+      align-items:center;
+    }
+
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      backdrop-filter: blur(10px);
+    }
+
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: #9aa;
+      box-shadow: 0 0 0 4px rgba(154,170,170,.15);
+    }
+    .dot.ok{ background: var(--good); box-shadow: 0 0 0 4px rgba(55,211,162,.18); }
+    .dot.warn{ background: var(--warn); box-shadow: 0 0 0 4px rgba(255,204,102,.18); }
+    .dot.bad{ background: var(--bad); box-shadow: 0 0 0 4px rgba(255,91,122,.18); }
+
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+
+    .btn{
+      border:1px solid var(--stroke);
+      background: var(--card);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      transition:.15s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
+      font-weight:600;
+      font-size:13px;
+      display:inline-flex; gap:10px; align-items:center;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.primary{
+      border-color: rgba(55,211,162,.38);
+      background: linear-gradient(135deg, rgba(55,211,162,.22), rgba(74,163,255,.12));
+    }
+    .btn.danger{
+      border-color: rgba(255,91,122,.35);
+      background: linear-gradient(135deg, rgba(255,91,122,.18), rgba(255,204,102,.06));
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .panel{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+
+    .panel-header{
+      padding:12px 14px;
+      border-bottom:1px solid var(--stroke);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .panel-header h3{
+      margin:0; font-size:13px; letter-spacing:.2px; color: var(--muted);
+      font-weight:700;
+    }
+    .panel-body{ padding:14px; }
+
+    /* ============ Cards/Gauges ============ */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .card{
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.14);
+      position:relative;
+      overflow:hidden;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-40px -30px auto auto;
+      width:120px; height:120px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.16), transparent 60%);
+      transform: rotate(20deg);
+      pointer-events:none;
+    }
+    .card-head{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .card-title{
+      display:flex; flex-direction:column; gap:3px;
+    }
+    .card-title .k{ font-size:12px; color: var(--muted); font-weight:700; }
+    .card-title .s{ font-size:12px; color: var(--muted2); }
+
+    .value{
+      font-size: 28px; font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .unit{ font-size: 12px; color: var(--muted); font-weight:700; margin-left:6px; }
+
+    .gauge{
+      width:110px; height:110px;
+      display:grid; place-items:center;
+    }
+    .gauge svg{ width:110px; height:110px; }
+    .gauge .center{
+      position:absolute;
+      width:110px; height:110px;
+      display:grid; place-items:center;
+      text-align:center;
+      pointer-events:none;
+    }
+    .gauge .center .small{
+      font-size:11px; color: var(--muted2);
+      margin-top:2px;
+    }
+
+    /* ============ Trend Chart ============ */
+    .chartWrap{
+      height: 240px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.08);
+      overflow:hidden;
+      position:relative;
+    }
+    body.light .chartWrap{ background: rgba(255,255,255,.55); }
+    canvas{ display:block; width:100%; height:100%; }
+
+    .legend{
+      display:flex; gap:10px; flex-wrap:wrap;
+      font-size:12px; color: var(--muted);
+      margin-top:10px;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+    }
+    .sw{
+      width:10px; height:10px; border-radius:3px;
+    }
+
+    /* ============ Controls ============ */
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .ctrl{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding: 12px;
+      border-radius: 16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+    }
+    .ctrl .left{
+      display:flex; flex-direction:column; gap:3px;
+    }
+    .ctrl .name{
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .ctrl .desc{
+      font-size:12px; color: var(--muted2);
+    }
+
+    .toggle{
+      position:relative;
+      width: 54px; height: 32px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      transition: .15s ease;
+      flex: 0 0 auto;
+    }
+    .toggle .knob{
+      position:absolute; top:4px; left:4px;
+      width:24px; height:24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      transition: .15s ease;
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .toggle.on{
+      background: rgba(55,211,162,.22);
+      border-color: rgba(55,211,162,.35);
+    }
+    .toggle.on .knob{
+      left: 26px;
+      background: rgba(55,211,162,.92);
+    }
+
+    .formRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    label{
+      display:flex; flex-direction:column; gap:6px;
+      font-size:12px; color: var(--muted);
+      font-weight:700;
+    }
+    input[type="number"], input[type="text"], select{
+      width:100%;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      outline:none;
+    }
+    body.light input, body.light select{ background: rgba(255,255,255,.85); }
+
+    .hint{
+      font-size:12px; color: var(--muted2); margin-top:8px;
+      line-height:1.45;
+    }
+
+    /* ============ Logs ============ */
+    .logTools{
+      display:flex; flex-wrap:wrap;
+      gap:10px; align-items:center;
+    }
+    .logTable{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+    }
+    .logTable th, .logTable td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--stroke);
+      font-size:12px;
+      vertical-align:top;
+    }
+    .logTable th{
+      text-align:left;
+      color: var(--muted);
+      font-weight:800;
+      background: rgba(255,255,255,.04);
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      font-weight:800;
+      font-size:11px;
+      letter-spacing:.2px;
+    }
+    .badge.info{ background: rgba(74,163,255,.12); border-color: rgba(74,163,255,.25); }
+    .badge.warn{ background: rgba(255,204,102,.12); border-color: rgba(255,204,102,.25); }
+    .badge.bad { background: rgba(255,91,122,.12); border-color: rgba(255,91,122,.25); }
+    .msgMono{ font-family: var(--mono); color: var(--muted); }
+
+    /* ============ Tabs ============ */
+    .view{ display:none; }
+    .view.active{ display:block; }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{
+        height:auto; position:relative;
+        border-right:none; border-bottom:1px solid var(--stroke);
+      }
+      .grid{ grid-template-columns: 1fr; }
+      .cards{ grid-template-columns: 1fr; }
+      .formRow{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>草莓穹頂 AIOT</h1>
+          <div class="sub">示範用 Dashboard（無後端）</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="主選單">
+        <button class="active" data-tab="dashboard">
+          <span class="ico" aria-hidden="true">📊</span>
+          儀錶板
+        </button>
+        <button data-tab="controls">
+          <span class="ico" aria-hidden="true">🎛️</span>
+          控制與設定
+        </button>
+        <button data-tab="logs">
+          <span class="ico" aria-hidden="true">🧾</span>
+          日誌
+        </button>
+        <button data-tab="about">
+          <span class="ico" aria-hidden="true">ℹ️</span>
+          說明
+        </button>
+      </nav>
+
+      <div class="side-footer">
+        <div>Device: <span id="deviceName" class="msgMono">dome01</span></div>
+        <div>Mode: <span id="modeText" class="msgMono">SIMULATION</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h2 id="pageTitle">儀錶板</h2>
+          <div class="meta">
+            <span class="pill">
+              <span id="healthDot" class="dot ok"></span>
+              <span id="healthText">Online（模擬）</span>
+            </span>
+            <span class="pill">最後更新：<span id="lastUpdate" class="msgMono">--:--:--</span></span>
+            <span class="pill">RSSI：<span id="rssi" class="msgMono">-48 dBm</span></span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="btnTheme" title="切換深/淺色">🌓 外觀</button>
+          <button class="btn primary" id="btnPause">⏸ 暫停模擬</button>
+          <button class="btn danger" id="btnAlertTest">⚠️ 觸發警示</button>
+        </div>
+      </div>
+
+      <!-- ===== Dashboard ===== -->
+      <section class="view active" id="view-dashboard">
+        <div class="cards">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">
+                <div class="k">溫度</div>
+                <div class="s">環境監測</div>
+              </div>
+              <div class="gauge" data-gauge="temp">
+                <div class="center">
+                  <div class="value"><span id="tempVal">--</span><span class="unit">°C</span></div>
+                  <div class="small" id="tempHint">正常</div>
+                </div>
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gradTemp" x1="0" x2="1">
+                      <stop offset="0" stop-color="rgba(55,211,162,.95)"/>
+                      <stop offset="1" stop-color="rgba(74,163,255,.95)"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+                  <circle id="tempRing" cx="60" cy="60" r="44" fill="none" stroke="url(#gradTemp)" stroke-width="10"
+                          stroke-linecap="round" transform="rotate(-90 60 60)"
+                          stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+                </svg>
+              </div>
+            </div>
+            <div class="muted">建議範圍：18–28 °C（示範）</div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">
+                <div class="k">濕度</div>
+                <div class="s">環境監測</div>
+              </div>
+              <div class="gauge" data-gauge="hum">
+                <div class="center">
+                  <div class="value"><span id="humVal">--</span><span class="unit">%RH</span></div>
+                  <div class="small" id="humHint">正常</div>
+                </div>
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gradHum" x1="0" x2="1">
+                      <stop offset="0" stop-color="rgba(74,163,255,.95)"/>
+                      <stop offset="1" stop-color="rgba(55,211,162,.95)"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+                  <circle id="humRing" cx="60" cy="60" r="44" fill="none" stroke="url(#gradHum)" stroke-width="10"
+                          stroke-linecap="round" transform="rotate(-90 60 60)"
+                          stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+                </svg>
+              </div>
+            </div>
+            <div class="muted">建議範圍：60–80 %RH（示範）</div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">
+                <div class="k">光照</div>
+                <div class="s">補光依據</div>
+              </div>
+              <div class="gauge" data-gauge="lux">
+                <div class="center">
+                  <div class="value"><span id="luxVal">--</span><span class="unit">lux</span></div>
+                  <div class="small" id="luxHint">正常</div>
+                </div>
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="gradLux" x1="0" x2="1">
+                      <stop offset="0" stop-color="rgba(255,204,102,.95)"/>
+                      <stop offset="1" stop-color="rgba(74,163,255,.95)"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+                  <circle id="luxRing" cx="60" cy="60" r="44" fill="none" stroke="url(#gradLux)" stroke-width="10"
+                          stroke-linecap="round" transform="rotate(-90 60 60)"
+                          stroke-dasharray="276.46" stroke-dashoffset="276.46"/>
+                </svg>
+              </div>
+            </div>
+            <div class="muted">門檻：低於 <span class="msgMono" id="luxMinText">12000</span> lux 自動補光（示範）</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>即時趨勢（最近 60 秒）</h3>
+              <span class="pill">更新週期：<span class="msgMono">1s</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="chartWrap">
+                <canvas id="trend"></canvas>
+              </div>
+              <div class="legend">
+                <span class="tag"><span class="sw" style="background: rgba(55,211,162,.9)"></span>溫度</span>
+                <span class="tag"><span class="sw" style="background: rgba(74,163,255,.9)"></span>濕度</span>
+                <span class="tag"><span class="sw" style="background: rgba(255,204,102,.9)"></span>光照</span>
+              </div>
+              <div class="hint">提示：此頁面為展示用，資料由前端隨機/規則生成，可用右上角「暫停模擬」查看靜止畫面。</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>執行元件狀態</h3>
+              <span class="pill">AUTO：<span class="msgMono" id="autoState">ON</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="controls">
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">補光燈</div>
+                    <div class="desc">手動/自動切換（示範）</div>
+                  </div>
+                  <div class="toggle" id="toggleLight" role="switch" aria-checked="false" tabindex="0">
+                    <div class="knob"></div>
+                  </div>
+                </div>
+
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">灌水系統</div>
+                    <div class="desc">支援灌水秒數（示範）</div>
+                  </div>
+                  <div class="toggle" id="togglePump" role="switch" aria-checked="false" tabindex="0">
+                    <div class="knob"></div>
+                  </div>
+                </div>
+
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">快速操作</div>
+                    <div class="desc">一鍵灌水/關閉全部</div>
+                  </div>
+                  <div style="display:flex; gap:10px;">
+                    <button class="btn primary" id="btnWater10">灌水 10s</button>
+                    <button class="btn danger" id="btnAllOff">全部關閉</button>
+                  </div>
+                </div>
+
+                <div class="hint">下方「控制與設定」頁可以調整門檻與自動模式邏輯（仍為前端模擬）。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Controls ===== -->
+      <section class="view" id="view-controls">
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>控制（Demo）</h3>
+              <span class="pill">目前模式：<span class="msgMono" id="modeBadge">AUTO</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="controls">
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">自動控制</div>
+                    <div class="desc">依門檻自動補光/灌水（示範）</div>
+                  </div>
+                  <div class="toggle on" id="toggleAuto" role="switch" aria-checked="true" tabindex="0">
+                    <div class="knob"></div>
+                  </div>
+                </div>
+
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">補光燈</div>
+                    <div class="desc">手動開關（AUTO 會覆寫）</div>
+                  </div>
+                  <div style="display:flex; gap:10px;">
+                    <button class="btn primary" id="btnLightOn">開燈</button>
+                    <button class="btn danger" id="btnLightOff">關燈</button>
+                  </div>
+                </div>
+
+                <div class="ctrl">
+                  <div class="left">
+                    <div class="name">灌水</div>
+                    <div class="desc">指定秒數後自動停止（示範）</div>
+                  </div>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <input id="pumpSec" type="number" min="1" max="600" value="10" style="width:110px;" />
+                    <button class="btn primary" id="btnPumpRun">開始</button>
+                    <button class="btn danger" id="btnPumpStop">停止</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>門檻設定（Demo）</h3>
+              <span class="pill">套用：<span class="msgMono" id="cfgState">已套用</span></span>
+            </div>
+            <div class="panel-body">
+              <div class="formRow">
+                <label>光照最低（lux）
+                  <input id="luxMin" type="number" min="0" max="50000" value="12000">
+                </label>
+                <label>濕度最低（%RH）
+                  <input id="humMin" type="number" min="0" max="100" value="60">
+                </label>
+              </div>
+              <div class="formRow" style="margin-top:10px;">
+                <label>溫度過高警示（°C）
+                  <input id="tempHi" type="number" min="-10" max="60" value="30">
+                </label>
+                <label>自動灌水秒數
+                  <input id="autoPumpSec" type="number" min="1" max="600" value="8">
+                </label>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                <button class="btn primary" id="btnApplyCfg">套用設定</button>
+                <button class="btn" id="btnResetCfg">重設為預設</button>
+              </div>
+
+              <div class="hint">
+                自動邏輯（示範）：<br>
+                1) 光照 &lt; luxMin → 補光燈 ON；光照 ≥ luxMin + 800 → OFF（防抖）<br>
+                2) 濕度 &lt; humMin → 自動灌水 autoPumpSec 秒（並寫入日誌）<br>
+                3) 溫度 ≥ tempHi → 產生「警示」日誌
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Logs ===== -->
+      <section class="view" id="view-logs">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>事件日誌</h3>
+            <div class="logTools">
+              <input id="logSearch" type="text" placeholder="搜尋：例如 pump / AUTO / 警示…" style="width:260px;">
+              <select id="logLevel">
+                <option value="all">全部等級</option>
+                <option value="info">INFO</option>
+                <option value="warn">WARN</option>
+                <option value="bad">ALERT</option>
+              </select>
+              <button class="btn" id="btnExport">匯出 JSON</button>
+              <button class="btn danger" id="btnClearLogs">清空</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <table class="logTable" aria-label="日誌表格">
+              <thead>
+                <tr>
+                  <th style="width:160px;">時間</th>
+                  <th style="width:90px;">等級</th>
+                  <th>事件</th>
+                  <th style="width:260px;">細節</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+            <div class="hint">日誌儲存在瀏覽器記憶體中（示範），重新整理頁面會重置。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== About ===== -->
+      <section class="view" id="view-about">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>說明</h3>
+            <span class="pill">Demo Only</span>
+          </div>
+          <div class="panel-body">
+            <div style="line-height:1.65; color:var(--muted);">
+              <p>這是一個「不需要真的可用」的展示頁：儀錶板、控制開關、日誌、外觀美化都在同一個 HTML 檔完成。</p>
+              <p>之後若要接上真實系統（ESP32 / MQTT / REST API），只要把「模擬資料產生」改成「從後端拉資料」或「訂閱 MQTT」即可，UI 不必重做。</p>
+              <p class="msgMono">你也可以把版面與配色當成期末/簡報用的展示畫面。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ============ Helpers ============
+    const $ = (id) => document.getElementById(id);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const fmtTime = (d=new Date()) =>
+      d.toLocaleTimeString("zh-TW", { hour12:false });
+
+    // ============ App State ============
+    const state = {
+      paused: false,
+      auto: true,
+      lightOn: false,
+      pumpOn: false,
+      pumpOffAt: 0,
+
+      cfg: {
+        luxMin: 12000,
+        humMin: 60,
+        tempHi: 30,
+        autoPumpSec: 8,
+      },
+
+      // sensor values (simulated)
+      tempC: 24.6,
+      humRH: 71.0,
+      lux: 15500,
+
+      // series for chart (last 60 points)
+      series: {
+        temp: [],
+        hum: [],
+        lux: []
+      },
+
+      logs: []
+    };
+
+    function addLog(level, event, detail="") {
+      const row = {
+        ts: new Date().toISOString(),
+        time: fmtTime(),
+        level, event, detail
+      };
+      state.logs.unshift(row);
+      // cap to 200
+      if (state.logs.length > 200) state.logs.length = 200;
+      renderLogs();
+    }
+
+    // ============ Tabs ============
+    const tabButtons = document.querySelectorAll(".nav button");
+    function setTab(name){
+      tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      $(`view-${name}`).classList.add("active");
+      const titleMap = { dashboard:"儀錶板", controls:"控制與設定", logs:"日誌", about:"說明" };
+      $("pageTitle").textContent = titleMap[name] ?? "儀錶板";
+    }
+    tabButtons.forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+    // ============ Theme ============
+    $("btnTheme").addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      addLog("info", "UI_THEME", document.body.classList.contains("light") ? "Light" : "Dark");
+      drawTrend();
+    });
+
+    // ============ Toggles ============
+    function setToggle(el, on){
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-checked", on ? "true" : "false");
+    }
+
+    function setLight(on, source="MANUAL"){
+      state.lightOn = !!on;
+      setToggle($("toggleLight"), state.lightOn);
+      addLog("info", "LIGHT", `${source} → ${state.lightOn ? "ON" : "OFF"}`);
+    }
+
+    function setPump(on, source="MANUAL", durationSec=0){
+      state.pumpOn = !!on;
+      setToggle($("togglePump"), state.pumpOn);
+
+      if (state.pumpOn && durationSec > 0) {
+        state.pumpOffAt = Date.now() + durationSec * 1000;
+        addLog("info", "PUMP", `${source} → ON (${durationSec}s)`);
+      } else {
+        state.pumpOffAt = 0;
+        addLog("info", "PUMP", `${source} → ${state.pumpOn ? "ON" : "OFF"}`);
+      }
+    }
+
+    function setAuto(on){
+      state.auto = !!on;
+      setToggle($("toggleAuto"), state.auto);
+      $("autoState").textContent = state.auto ? "ON" : "OFF";
+      $("modeBadge").textContent = state.auto ? "AUTO" : "MANUAL";
+      addLog("info", "AUTO_MODE", state.auto ? "ON" : "OFF");
+    }
+
+    // click/keyboard for toggles
+    function bindToggle(id, getState, setStateFn){
+      const el = $(id);
+      const act = () => setStateFn(!getState());
+      el.addEventListener("click", act);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); }
+      });
+    }
+    bindToggle("toggleLight", () => state.lightOn, (v)=> setLight(v, state.auto ? "AUTO_OVERRIDE?" : "MANUAL"));
+    bindToggle("togglePump",  () => state.pumpOn,  (v)=> setPump(v, state.auto ? "AUTO_OVERRIDE?" : "MANUAL"));
+    bindToggle("toggleAuto",  () => state.auto,    (v)=> setAuto(v));
+
+    // Buttons
+    $("btnLightOn").addEventListener("click", ()=> setLight(true, "MANUAL_BTN"));
+    $("btnLightOff").addEventListener("click", ()=> setLight(false, "MANUAL_BTN"));
+
+    $("btnPumpRun").addEventListener("click", ()=> {
+      const sec = clamp(parseInt($("pumpSec").value,10) || 10, 1, 600);
+      $("pumpSec").value = sec;
+      setPump(true, "MANUAL_BTN", sec);
+    });
+    $("btnPumpStop").addEventListener("click", ()=> setPump(false, "MANUAL_BTN"));
+
+    $("btnWater10").addEventListener("click", ()=> setPump(true, "QUICK", 10));
+    $("btnAllOff").addEventListener("click", ()=> {
+      setLight(false, "QUICK");
+      setPump(false, "QUICK");
+      addLog("warn", "ALL_OFF", "使用者一鍵關閉全部");
+    });
+
+    // Pause simulation
+    $("btnPause").addEventListener("click", () => {
+      state.paused = !state.paused;
+      $("btnPause").textContent = state.paused ? "▶️ 繼續模擬" : "⏸ 暫停模擬";
+      addLog("info", "SIM", state.paused ? "PAUSED" : "RESUMED");
+    });
+
+    // Alert test
+    $("btnAlertTest").addEventListener("click", () => {
+      addLog("bad", "ALERT_TEST", "示範：手動觸發警示事件");
+      flashHealth("bad", "Alert（示範）", 1200);
+    });
+
+    // ============ Config ============
+    function applyCfg(fromUI=true){
+      const cfg = state.cfg;
+      if (fromUI){
+        cfg.luxMin = clamp(parseInt($("luxMin").value,10) || 12000, 0, 50000);
+        cfg.humMin = clamp(parseInt($("humMin").value,10) || 60, 0, 100);
+        cfg.tempHi = clamp(parseInt($("tempHi").value,10) || 30, -10, 60);
+        cfg.autoPumpSec = clamp(parseInt($("autoPumpSec").value,10) || 8, 1, 600);
+
+        $("luxMin").value = cfg.luxMin;
+        $("humMin").value = cfg.humMin;
+        $("tempHi").value = cfg.tempHi;
+        $("autoPumpSec").value = cfg.autoPumpSec;
+      }
+      $("luxMinText").textContent = cfg.luxMin;
+      $("cfgState").textContent = "已套用";
+      addLog("info", "CONFIG_APPLY", JSON.stringify(cfg));
+    }
+
+    $("btnApplyCfg").addEventListener("click", ()=> applyCfg(true));
+    $("btnResetCfg").addEventListener("click", ()=> {
+      state.cfg = { luxMin: 12000, humMin: 60, tempHi: 30, autoPumpSec: 8 };
+      $("luxMin").value = state.cfg.luxMin;
+      $("humMin").value = state.cfg.humMin;
+      $("tempHi").value = state.cfg.tempHi;
+      $("autoPumpSec").value = state.cfg.autoPumpSec;
+      applyCfg(true);
+      addLog("warn", "CONFIG_RESET", "重設為預設");
+    });
+
+    // ============ Gauges ============
+    const CIRC = 276.46; // 2πr where r=44
+    function setRing(ringId, pct){
+      const ring = $(ringId);
+      const p = clamp(pct, 0, 1);
+      ring.style.strokeDashoffset = String(CIRC * (1 - p));
+    }
+
+    function setHint(el, level, text){
+      el.textContent = text;
+      el.style.color = level === "bad" ? "var(--bad)"
+        : level === "warn" ? "var(--warn)"
+        : "var(--muted2)";
+    }
+
+    // ============ Trend Chart (Canvas) ============
+    const canvas = $("trend");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas(){
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener("resize", () => { resizeCanvas(); drawTrend(); });
+
+    function drawGrid(w,h){
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = "transparent";
+      // grid lines
+      ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue("--grid").trim();
+      ctx.lineWidth = 1;
+      const stepX = w / 6;
+      const stepY = h / 4;
+      ctx.beginPath();
+      for (let i=1;i<6;i++){
+        ctx.moveTo(i*stepX, 0);
+        ctx.lineTo(i*stepX, h);
+      }
+      for (let j=1;j<4;j++){
+        ctx.moveTo(0, j*stepY);
+        ctx.lineTo(w, j*stepY);
+      }
+      ctx.stroke();
+    }
+
+    function drawLine(series, color, yMin, yMax){
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      const n = series.length;
+      if (n < 2) return;
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i=0;i<n;i++){
+        const x = (i/(n-1)) * (w-16) + 8;
+        const yv = (series[i] - yMin) / (yMax - yMin);
+        const y = (1 - clamp(yv,0,1)) * (h-16) + 8;
+        if (i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+
+    function drawTrend(){
+      resizeCanvas();
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+
+      // bg subtle
+      ctx.fillStyle = "rgba(0,0,0,.02)";
+      ctx.fillRect(0,0,w,h);
+
+      drawGrid(w,h);
+
+      // ranges for mapping
+      const tMin=10, tMax=40;
+      const hMin=0,  hMax=100;
+      const lMin=0,  lMax=20000;
+
+      drawLine(state.series.temp, "rgba(55,211,162,.9)", tMin, tMax);
+      drawLine(state.series.hum,  "rgba(74,163,255,.9)", hMin, hMax);
+      drawLine(state.series.lux,  "rgba(255,204,102,.9)", lMin, lMax);
+    }
+
+    // ============ Logs UI ============
+    function badgeHtml(level){
+      const label = level === "bad" ? "ALERT" : level.toUpperCase();
+      return `<span class="badge ${level}">${label}</span>`;
+    }
+
+    function renderLogs(){
+      const q = $("logSearch").value.trim().toLowerCase();
+      const lvl = $("logLevel").value;
+
+      const rows = state.logs.filter(r => {
+        if (lvl !== "all" && r.level !== lvl) return false;
+        if (!q) return true;
+        return (r.event + " " + r.detail).toLowerCase().includes(q);
+      });
+
+      const body = $("logBody");
+      body.innerHTML = rows.map(r => `
+        <tr>
+          <td class="msgMono">${r.time}</td>
+          <td>${badgeHtml(r.level)}</td>
+          <td style="font-weight:800;">${escapeHtml(r.event)}</td>
+          <td class="msgMono">${escapeHtml(r.detail)}</td>
+        </tr>
+      `).join("") || `
+        <tr><td colspan="4" style="color:var(--muted2); padding:16px;">沒有符合條件的日誌</td></tr>
+      `;
+    }
+
+    function escapeHtml(s){
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    }
+
+    $("logSearch").addEventListener("input", renderLogs);
+    $("logLevel").addEventListener("change", renderLogs);
+
+    $("btnClearLogs").addEventListener("click", () => {
+      state.logs = [];
+      renderLogs();
+      addLog("warn", "LOGS_CLEARED", "日誌已清空"); // will re-add one entry
+    });
+
+    $("btnExport").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state.logs, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dome-demo-logs.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      addLog("info", "LOG_EXPORT", "匯出 JSON");
+    });
+
+    // ============ Health indicator ============
+    let healthTimer = 0;
+    function flashHealth(level, text, ms=900){
+      clearTimeout(healthTimer);
+      const dot = $("healthDot");
+      dot.classList.remove("ok","warn","bad");
+      dot.classList.add(level);
+      $("healthText").textContent = text;
+      healthTimer = setTimeout(() => {
+        dot.classList.remove("ok","warn","bad");
+        dot.classList.add("ok");
+        $("healthText").textContent = "Online（模擬）";
+      }, ms);
+    }
+
+    // ============ Simulation ============
+    function pushSeries(name, v){
+      const arr = state.series[name];
+      arr.push(v);
+      if (arr.length > 60) arr.shift();
+    }
+
+    function simulateSensors(){
+      // smooth-ish changes
+      const t = state.tempC + (Math.random() - 0.5) * 0.25;
+      const h = state.humRH + (Math.random() - 0.5) * 0.8;
+      let l = state.lux + (Math.random() - 0.5) * 900;
+
+      // day/night wave
+      const wave = (Math.sin(Date.now()/12000) + 1) / 2; // 0..1
+      l = l * 0.85 + (7000 + wave * 12000) * 0.15;
+
+      // actuators influence (demo effect)
+      if (state.lightOn) l += 2500;
+      if (state.pumpOn) state.humRH += 0.18;
+
+      state.tempC = clamp(t, 12, 38);
+      state.humRH = clamp(h, 35, 92);
+      state.lux   = clamp(l, 0, 22000);
+
+      // pump auto-off timer
+      if (state.pumpOn && state.pumpOffAt && Date.now() >= state.pumpOffAt){
+        state.pumpOn = false;
+        state.pumpOffAt = 0;
+        setToggle($("togglePump"), false);
+        addLog("info", "PUMP", "TIMER → OFF");
+      }
+    }
+
+    function autoControl(){
+      if (!state.auto) return;
+      const { luxMin, humMin, tempHi, autoPumpSec } = state.cfg;
+
+      // Light hysteresis
+      if (state.lux < luxMin && !state.lightOn){
+        state.lightOn = true;
+        setToggle($("toggleLight"), true);
+        addLog("info", "LIGHT", `AUTO → ON (lux ${Math.round(state.lux)} < ${luxMin})`);
+      } else if (state.lux >= luxMin + 800 && state.lightOn){
+        state.lightOn = false;
+        setToggle($("toggleLight"), false);
+        addLog("info", "LIGHT", `AUTO → OFF (lux ${Math.round(state.lux)} ≥ ${luxMin+800})`);
+      }
+
+      // Humidity triggers pump (simple)
+      if (state.humRH < humMin && !state.pumpOn){
+        state.pumpOn = true;
+        setToggle($("togglePump"), true);
+        state.pumpOffAt = Date.now() + autoPumpSec * 1000;
+        addLog("warn", "PUMP", `AUTO → ON (${autoPumpSec}s, hum ${state.humRH.toFixed(1)} < ${humMin})`);
+      }
+
+      // Temperature alert
+      if (state.tempC >= tempHi){
+        addLog("bad", "TEMP_ALERT", `溫度過高：${state.tempC.toFixed(1)}°C ≥ ${tempHi}°C`);
+        flashHealth("warn", "Warning（示範）", 1100);
+      }
+    }
+
+    function updateUI(){
+      // top meta
+      $("lastUpdate").textContent = fmtTime();
+      $("rssi").textContent = `${-42 - Math.round(Math.random()*12)} dBm`;
+
+      // values
+      $("tempVal").textContent = state.tempC.toFixed(1);
+      $("humVal").textContent  = state.humRH.toFixed(1);
+      $("luxVal").textContent  = Math.round(state.lux);
+
+      // gauges mapping
+      setRing("tempRing", (state.tempC - 10) / (40 - 10));
+      setRing("humRing", state.humRH / 100);
+      setRing("luxRing", state.lux / 20000);
+
+      // hints
+      const tHint = $("tempHint");
+      if (state.tempC >= state.cfg.tempHi) setHint(tHint, "bad", "偏高");
+      else if (state.tempC >= 28) setHint(tHint, "warn", "略高");
+      else setHint(tHint, "ok", "正常");
+
+      const hHint = $("humHint");
+      if (state.humRH < state.cfg.humMin) setHint(hHint, "warn", "偏低");
+      else if (state.humRH > 85) setHint(hHint, "warn", "偏高");
+      else setHint(hHint, "ok", "正常");
+
+      const lHint = $("luxHint");
+      if (state.lux < state.cfg.luxMin) setHint(lHint, "warn", "不足");
+      else setHint(lHint, "ok", "正常");
+
+      // auto badges
+      $("autoState").textContent = state.auto ? "ON" : "OFF";
+      $("modeBadge").textContent = state.auto ? "AUTO" : "MANUAL";
+    }
+
+    function tick(){
+      if (!state.paused){
+        simulateSensors();
+        autoControl();
+
+        pushSeries("temp", state.tempC);
+        pushSeries("hum", state.humRH);
+        pushSeries("lux", state.lux);
+
+        updateUI();
+        drawTrend();
+
+        // occasional "network jitter" demo
+        if (Math.random() < 0.02) flashHealth("warn", "訊號抖動（示範）", 700);
+      }
+    }
+
+    // ============ Init ============
+    function init(){
+      // initial toggles
+      setToggle($("toggleLight"), state.lightOn);
+      setToggle($("togglePump"), state.pumpOn);
+      setAuto(true);
+
+      // seed series
+      for (let i=0;i<30;i++){
+        simulateSensors();
+        pushSeries("temp", state.tempC);
+        pushSeries("hum", state.humRH);
+        pushSeries("lux", state.lux);
+      }
+
+      applyCfg(false);
+      updateUI();
+      drawTrend();
+
+      addLog("info", "BOOT", "示範介面已啟動");
+      addLog("info", "SIM", "開始產生模擬資料");
+
+      setInterval(tick, 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
